@@ -1,15 +1,14 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro"
-       name="arm" > 
+       name="arm" >
 
-  <xacro:arg name="joint_limit_params" default="$(find tams_ur5_description)/config/joint_ranges/default.yaml"/>
-  <xacro:arg name="kinematics_params" default="$(find tams_ur5_description)/config/tams_ur5_calibration.yaml"/>
+  <xacro:arg name="ur5_prefix" default="ur5_"/>
+  <xacro:arg name="joint_limits_parameters_file" default="$(find tams_ur5_description)/config/joint_ranges/default.yaml"/>
+  <xacro:arg name="kinematics_parameters_file" default="$(find tams_ur5_description)/config/tams_ur5_calibration.yaml"/>
   <xacro:arg name="transmission_hw_interface" default="hardware_interface/PositionJointInterface"/>
 
-  <xacro:property name="flange_link_name" value="ur5_ee_link"/>
-
   <!-- include macro definitions -->
-  <xacro:include filename="$(find tams_ur5_description)/urdf/ur5.urdf.xacro" />
+  <xacro:include filename="$(find ur_description)/urdf/inc/ur5_macro.xacro"/>
   <xacro:include filename="$(find robotiq_3f_gripper_visualization)/cfg/robotiq-3f-gripper_articulated_macro.xacro"/>
   <xacro:include filename="$(find robotiq_ft_sensor)/urdf/robotiq_fts150.urdf.xacro" />
   <xacro:include filename="$(find tams_ur5_description)/urdf/ft_adapter.urdf.xacro" />
@@ -17,8 +16,25 @@
   <xacro:include filename="$(find tams_ur5_description)/urdf/plug_collision_model.urdf.xacro" />
 
   <!-- ur5 arm -->
-  <xacro:ur5_robot prefix="ur5_" joint_limit_params="$(arg joint_limit_params)"
-                   kinematics_params="$(arg kinematics_params)" transmission_hw_interface="$(arg transmission_hw_interface)"/>
+  <xacro:ur5_robot prefix="$(arg ur5_prefix)" joint_limits_parameters_file="$(arg joint_limits_parameters_file)"
+                   kinematics_parameters_file="$(arg kinematics_parameters_file)" transmission_hw_interface="$(arg transmission_hw_interface)"/>
+
+  <!-- gazebo params for ur5 -->
+  <xacro:include filename="$(find tams_ur5_setup_description)/urdf/upstream/ur.gazebo.xacro" />
+  <xacro:ur_arm_gazebo prefix="$(arg ur5_prefix)" />
+
+  <!-- link which was used on previous tams_ur5_description to attach tools -->
+  <link name="$(arg ur5_prefix)ee_link"/>
+  <joint name="$(arg ur5_prefix)ee_fixed_joint" type="fixed">
+      <parent link="$(arg ur5_prefix)flange" />
+      <child link ="$(arg ur5_prefix)ee_link" />
+      <origin xyz="0.0 0.0 0.0" rpy="${pi} 0.0 0.0" />
+  </joint>
+
+
+  <!-- <xacro:property name="flange_link_name" value="${prefix}flange}"/> -->
+  <xacro:property name="flange_link_name" value="$(arg ur5_prefix)ee_link"/>
+
 
   <!-- ft_adapter -->
   <xacro:ft_adapter name="ft_adapter" parent="${flange_link_name}">
